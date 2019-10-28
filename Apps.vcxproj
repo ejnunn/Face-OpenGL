@@ -146,10 +146,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Apps\Face.cpp" />
     <ClCompile Include="..\..\Lib\glad.c" />
     <ClCompile Include="..\..\Lib\GLXtras.cpp" />
     <ClCompile Include="..\Lib\Camera.cpp" />
+    <ClCompile Include="Face.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\glfw3.h" />
