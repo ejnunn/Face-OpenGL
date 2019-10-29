@@ -149,6 +149,7 @@
     <ClCompile Include="..\..\Lib\glad.c" />
     <ClCompile Include="..\..\Lib\GLXtras.cpp" />
     <ClCompile Include="..\Lib\Camera.cpp" />
+    <ClCompile Include="..\Lib\Draw.cpp" />
     <ClCompile Include="Face.cpp" />
   </ItemGroup>
   <ItemGroup>
