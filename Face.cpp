@@ -12,6 +12,7 @@
 #include <algorithm>
 #include "GLXtras.h"
 #include "VecMat.h"
+#include "Draw.h"
 #include "Camera.h"
 
 // GPU identifiers
@@ -25,6 +26,7 @@ int winWidth = 500, winHeight = 500;
 Camera camera(winWidth / 2, winHeight / 2, vec3(0, 0, 0), vec3(0, 0, -1), 10, 0.001f, 500, false);
 bool shift = false;
 float fieldOfView = 30, cubeSize = 0.05f, cubeStretch = cubeSize;
+float gScale = .1f;
 
 // Identify points on face
 vec3 points[] = {
@@ -290,16 +292,17 @@ void Display(GLFWwindow* w) {
 	camera.SetSpeed(0.3f, 0.01f);
 
 	// Set window size
-	int screenWidth, screenHeight;
-	glfwGetWindowSize(w, &screenWidth, &screenHeight);
+//	int screenWidth, screenHeight; UNNEEDED
+//	glfwGetWindowSize(w, &screenWidth, &screenHeight); UNNEEDED
 
-	// Set scale 
-	mat4 scale = Scale(cubeSize, cubeSize, cubeStretch);
-
+	// Set scale
+//	mat4 scale = Scale(cubeSize, cubeSize, cubeStretch); // *** what's this cube stuff?
+	mat4 scale = Scale(gScale);
 	// Clear to gray, use app's shader
 	glClearColor(0.5, 0.5, 0.5, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(program);
+	glBindBuffer(GL_ARRAY_BUFFER, vBuffer); // **** needed to permit text, below
 
 	// Set vertex attribute pointers & uniforms
 	VertexAttribPointer(program, "point", 3, 0, (void*)0);
@@ -307,13 +310,27 @@ void Display(GLFWwindow* w) {
 	SetUniform(program, "modelview", camera.modelview * scale);
 	SetUniform(program, "persp", camera.persp);
 
+	/*
 	// Draw shape
-	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, triangles);
+	glLineWidth(2);
+	int ntris = sizeof(triangles) / (3 * sizeof(int)), nvrts = sizeof(points) / sizeof(vec3);
+	SetUniform(program, "color", vec3(.3f, .3f, .3f));
+	for (int i = 0; i < ntris; i++)
+		glDrawElements(GL_LINE_LOOP, 3, GL_UNSIGNED_INT, &triangles[i]);
+	SetUniform(program, "color", vec3(0, 0, 0));
+	glPointSize(8);
+	//glDrawArrays(GL_POINTS, 0, nvrts);
+	mat4 m = camera.persp * camera.modelview * scale;
+	UseDrawShader(m);
+	//for (int i = 0; i < nvrts; i++)
+	//	Text(points[i], m, vec3(0,0,0), 12, "%i", i);
+	*/
+	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, triangles); // FIXME
 
 	glFlush();
 }
 
-// Function to changing the points from pixel values to lie between +/- 1.  
+// Function to changing the points from pixel values to lie between +/- 1.
 void Normalize() {
 	int npoints = sizeof(points) / sizeof(vec3);
 	// Scale and offset so that points fall within +/-1 in x, y and z
@@ -338,7 +355,7 @@ void MouseButton(GLFWwindow* w, int butn, int action, int mods) {
 	if (action == GLFW_PRESS) {
 		double x, y;
 		glfwGetCursorPos(w, &x, &y);
-		camera.MouseDown((int)x, (int)y);
+		camera.MouseDown(x, y);
 	}
 	if (action == GLFW_RELEASE) {
 		camera.MouseUp();
@@ -346,20 +363,30 @@ void MouseButton(GLFWwindow* w, int butn, int action, int mods) {
 }
 
 // Mouse wheel event handler.
-void MouseWheel(GLFWwindow* w, double xoffset, double direction) {
-	camera.MouseWheel((int)direction, shift);
+// ****void MouseWheel(GLFWwindow* w, double xoffset, double direction) {
+//	camera.MouseWheel(direction, shift);
+//}
+bool Shift(GLFWwindow* w) {
+	return glfwGetKey(w, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+		glfwGetKey(w, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 }
+
+void MouseWheel(GLFWwindow* w, double xoffset, double yoffset) {
+	camera.MouseWheel(yoffset, Shift(w));
+}
+
 
 // Function called when mouse is held down and dragged.
 void MouseMove(GLFWwindow* w, double x, double y) {
 	if (glfwGetMouseButton(w, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		camera.MouseDrag((int)x, (int)y, shift);
+		camera.MouseDrag(x, y, Shift(w));
+		// ****	camera.MouseDrag(x, y, shift);
 	}
 }
 
-// Event handler for when different keys are pressed on the keyboard. 
+// Event handler for when different keys are pressed on the keyboard.
 void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
-	shift = mods & GLFW_MOD_SHIFT;
+	bool shift = mods & GLFW_MOD_SHIFT;
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
@@ -370,8 +397,9 @@ void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
 			fieldOfView = fieldOfView < 5 ? 5 : fieldOfView > 150 ? 150 : fieldOfView;
 			break;
 		case 'S':
-			cubeStretch *= shift ? .9f : 1.1f;
-			cubeStretch = cubeStretch < .02f ? .02f : cubeStretch;
+			gScale *= shift ? .9f : 1.1f;
+			//	**** cubeStretch *= shift ? .9f : 1.1f;
+			//	cubeStretch = cubeStretch < .02f ? .02f : cubeStretch;
 			break;
 		}
 	}
@@ -380,7 +408,7 @@ void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
 // Initializes the vertex buffer
 void InitVertexBuffer() {
 
-	// Normalize all points 
+	// Normalize all points
 	Normalize();
 
 	// Create an array to hold normals for each point
@@ -421,6 +449,11 @@ void ErrorGFLW(int id, const char* reason) {
 	printf("GFLW error %i: %s\n", id, reason);
 }
 
+void Resize(GLFWwindow* window, int width, int height) {
+	camera.Resize(width, height); // ****
+	glViewport(0, 0, winWidth = width, winHeight = height); // ****
+}
+
 void Close() {
 	// unbind vertex buffer and free GPU memory
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -432,8 +465,7 @@ int main() {
 	glfwSetErrorCallback(ErrorGFLW);
 	if (!glfwInit())
 		return 1;
-	int screenWidth = 1200;
-	GLFWwindow* w = glfwCreateWindow(screenWidth, screenWidth, "Face", NULL, NULL);
+	GLFWwindow* w = glfwCreateWindow(400, 400, "Face", NULL, NULL);
 	if (!w) {
 		glfwTerminate();
 		return 1;
@@ -448,6 +480,8 @@ int main() {
 	PrintGLErrors();
 	program = LinkProgramViaCode(&vertexShader, &pixelShader);
 	InitVertexBuffer();
+	camera.SetSpeed(.01, .001f); // **** otherwise, a bit twitchy
+	glfwSetWindowSizeCallback(w, Resize); // ***** so can view larger window
 	glfwSwapInterval(1);
 	while (!glfwWindowShouldClose(w)) {
 		Display(w);
