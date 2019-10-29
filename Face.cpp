@@ -310,6 +310,7 @@ void Display(GLFWwindow* w) {
 	SetUniform(program, "modelview", camera.modelview * scale);
 	SetUniform(program, "persp", camera.persp);
 
+	// Uncomment this to draw vertices and triangle outlines
 	/*
 	// Draw shape
 	glLineWidth(2);
@@ -325,7 +326,8 @@ void Display(GLFWwindow* w) {
 	//for (int i = 0; i < nvrts; i++)
 	//	Text(points[i], m, vec3(0,0,0), 12, "%i", i);
 	*/
-	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, triangles); // FIXME
+
+	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, triangles);
 
 	glFlush();
 }
