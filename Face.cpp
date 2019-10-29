@@ -17,17 +17,17 @@
 // GPU identifiers
 GLuint vBuffer = 0;
 GLuint program = 0;
- 
+
 // Window size and camera initilization
 int winWidth = 500, winHeight = 500;
 
 // Camera parameters: screenWidth, screenHeight, rotation, translation, FOV, nearDist, farDist, invVert
-Camera camera(winWidth/2, winHeight/2, vec3(0,0,0), vec3(0,0,-1), 10, 0.001f, 500, false);
+Camera camera(winWidth / 2, winHeight / 2, vec3(0, 0, 0), vec3(0, 0, -1), 10, 0.001f, 500, false);
 bool shift = false;
 float fieldOfView = 30, cubeSize = 0.05f, cubeStretch = cubeSize;
 
 // Identify points on face
-vec3 points[] = { 
+vec3 points[] = {
 	// left face
 	vec3(761, -268, 1225), // 0
 	vec3(392, -429, 1167), // 1
@@ -165,8 +165,8 @@ int triangles[][3] = {
 	{19, 26, 25}, // 23
 	{19, 25, 21}, // 24
 	{25, 22, 21}, // 25
-	{26, 27, 25}, // 26
-	{27, 28, 25}, // 27
+	{26, 27, 28}, // 26 // changed this one
+	{26, 28, 25}, // 27 // changed this one
 	{28, 29, 25}, // 28
 	{25, 29, 22}, // 29
 	{22, 29, 33}, // 30
@@ -183,7 +183,7 @@ int triangles[][3] = {
 	{37, 38, 39}, // 41
 	{35, 32, 34}, // 42
 	{34, 32, 31}, // 43
-	{37, 32, 35}, // 44
+	{37, 40, 35}, // 44 // changed this one
 	{37, 39, 40}, // 45
 	{35, 40, 32}, // 46
 	{41, 1, 0}, // 47
@@ -225,7 +225,7 @@ int triangles[][3] = {
 	{58, 60, 59}, // 87
 	{58, 59, 17}, // 88
 	{22, 20, 60}, // 89
-	{35, 37, 40}, // 90
+	{35, 40, 32}, // 90 // changed this one
 	{12, 44, 13}, // 91
 	{44, 46, 13}, // 92
 	{46, 14, 13}, // 93
@@ -280,12 +280,12 @@ const int ntriangles = sizeof(triangles) / sizeof(triangles[0]);
 const int nvertices = sizeof(triangles) / sizeof(int);
 
 // Function to display image on screen.
-void Display(GLFWwindow *w) {
+void Display(GLFWwindow* w) {
 
 	// Clears the buffer
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
-	
+
 	// Set camera speed
 	camera.SetSpeed(0.3f, 0.01f);
 
@@ -338,7 +338,7 @@ void MouseButton(GLFWwindow* w, int butn, int action, int mods) {
 	if (action == GLFW_PRESS) {
 		double x, y;
 		glfwGetCursorPos(w, &x, &y);
-		camera.MouseDown(x, y);
+		camera.MouseDown((int)x, (int)y);
 	}
 	if (action == GLFW_RELEASE) {
 		camera.MouseUp();
@@ -347,13 +347,13 @@ void MouseButton(GLFWwindow* w, int butn, int action, int mods) {
 
 // Mouse wheel event handler.
 void MouseWheel(GLFWwindow* w, double xoffset, double direction) {
-	camera.MouseWheel(direction, shift);
+	camera.MouseWheel((int)direction, shift);
 }
 
 // Function called when mouse is held down and dragged.
 void MouseMove(GLFWwindow* w, double x, double y) {
 	if (glfwGetMouseButton(w, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		camera.MouseDrag(x, y, shift);
+		camera.MouseDrag((int)x, (int)y, shift);
 	}
 }
 
@@ -362,17 +362,17 @@ void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
 	shift = mods & GLFW_MOD_SHIFT;
 	if (action == GLFW_PRESS) {
 		switch (key) {
-			case GLFW_KEY_ESCAPE:
-				glfwSetWindowShouldClose(w, GLFW_TRUE);
-				break;
-			case 'F':
-				fieldOfView += shift ? -5 : 5;
-				fieldOfView = fieldOfView < 5 ? 5 : fieldOfView > 150 ? 150 : fieldOfView;
-				break;
-			case 'S':
-				cubeStretch *= shift ? .9f : 1.1f;
-				cubeStretch = cubeStretch < .02f ? .02f : cubeStretch;
-				break;
+		case GLFW_KEY_ESCAPE:
+			glfwSetWindowShouldClose(w, GLFW_TRUE);
+			break;
+		case 'F':
+			fieldOfView += shift ? -5 : 5;
+			fieldOfView = fieldOfView < 5 ? 5 : fieldOfView > 150 ? 150 : fieldOfView;
+			break;
+		case 'S':
+			cubeStretch *= shift ? .9f : 1.1f;
+			cubeStretch = cubeStretch < .02f ? .02f : cubeStretch;
+			break;
 		}
 	}
 }
@@ -393,7 +393,7 @@ void InitVertexBuffer() {
 
 	// Compute normal for each triangle, accumulate for each vertex
 	for (int i = 0; i < ntriangles; ++i) {
-		int *t = triangles[i];
+		int* t = triangles[i];
 		vec3 p1(points[t[0]]), p2(points[t[1]]), p3(points[t[2]]);
 		vec3 n = normalize(cross(p3 - p2, p2 - p1));
 		for (int k = 0; k < 3; k++) {
@@ -411,7 +411,7 @@ void InitVertexBuffer() {
 	glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
 	// Allocate memory for vertex positions and normals
 	int sizeNms = sizeof(normals);
-	glBufferData(GL_ARRAY_BUFFER, sizePts+sizeNms, NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizePts + sizeNms, NULL, GL_STATIC_DRAW);
 	// Copy data
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizePts, &points[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, sizePts, sizeNms, &normals[0]);
