@@ -327,6 +327,7 @@ void Display(GLFWwindow* w) {
 	//	Text(points[i], m, vec3(0,0,0), 12, "%i", i);
 	*/
 
+	SetUniform(program, "color", vec3(1, 1, 1)); // sets default color of face to white
 	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, triangles);
 
 	glFlush();
