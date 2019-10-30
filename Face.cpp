@@ -13,6 +13,7 @@
 #include "GLXtras.h"
 #include "VecMat.h"
 #include "Camera.h"
+#include "Draw.h"
 
 // GPU identifiers
 GLuint vBuffer = 0;
@@ -74,8 +75,8 @@ vec3 points[] = {
 	vec3(402, -925, 1190), // 42
 	vec3(506, -865, 1223), // 43
 	vec3(554, -852, 1246), // 44
-	vec3(583, -887, 1246), // 45
-	vec3(641, -900, 1190), // 46
+	vec3(583, -925, 1201), // 45
+	vec3(641, -900, 1201), // 46
 	vec3(450, -972, 1201), // 47
 	vec3(535, -981, 1215), // 48
 	vec3(599, -969, 1201), // 49
@@ -406,6 +407,8 @@ int main() {
 	PrintGLErrors();
 	program = LinkProgramViaCode(&vertexShader, &pixelShader);
 	InitVertexBuffer();
+	camera.SetSpeed(.01, .001f); // **** otherwise, a bit twitchy
+	glfwSetWindowSizeCallback(w, Resize); // ***** so can view larger window
 	glfwSwapInterval(1);
 	while (!glfwWindowShouldClose(w)) {
 		Display(w);
