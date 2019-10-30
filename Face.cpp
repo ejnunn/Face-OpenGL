@@ -1,4 +1,4 @@
-// Assignment 5 - Create a face.
+// Assignment 5 (Exercise 10.2) - Create a face.
 // Eric Nunn & Yvonne Rogell
 // CPSC 5700, Seattle University, Fall Quarter 2019
 
@@ -12,7 +12,6 @@
 #include <algorithm>
 #include "GLXtras.h"
 #include "VecMat.h"
-#include "Draw.h"
 #include "Camera.h"
 
 // GPU identifiers
@@ -26,7 +25,6 @@ int winWidth = 500, winHeight = 500;
 Camera camera(winWidth / 2, winHeight / 2, vec3(0, 0, 0), vec3(0, 0, -1), 10, 0.001f, 500, false);
 bool shift = false;
 float fieldOfView = 30, cubeSize = 0.05f, cubeStretch = cubeSize;
-float gScale = .1f;
 
 // Identify points on face
 vec3 points[] = {
@@ -41,24 +39,24 @@ vec3 points[] = {
 	vec3(397, -727, 1233), // 7
 	vec3(324, -812, 1142), // 8
 	vec3(303, -846, 1060), // 9
-	vec3(305, -934, 1070), // 10 // changed z from 1039
+	vec3(305, -934, 1070), // 10
 	vec3(347, -918, 1124), // 11
 	vec3(503, -823, 1254), // 12
 	vec3(761, -885, 1312), // 13
 	vec3(761, -951, 1335), // 14
-	vec3(601, -1058, 1259), // 15
-	vec3(394, -1044, 1210), // 16 // changed z from 1170
+	vec3(601, -1058, 1250), // 15
+	vec3(394, -1044, 1210), // 16
 	vec3(761, -1197, 1433), // 17
 	vec3(242, -1002, 918), // 18
-	vec3(315, -1179, 1100), // 19 changed x from 290, z from 998
+	vec3(315, -1179, 1100), // 19 
 	vec3(761, -1364, 1316), // 20
-	vec3(462, -1290, 1225), // 21 changed z from 1115
+	vec3(400, -1190, 1185), // 21 
 	vec3(534, -1296, 1255), // 22
 	vec3(761, -1434, 1318), // 23
-	vec3(602, -1421, 1256), // 24 // changed z from 1256
+	vec3(602, -1421, 1256), // 24 
 	vec3(360, -1356, 1137), // 25
 	vec3(329, -1374, 1023), // 26
-	vec3(335, -1447, 826), // 27 // changed z from 826
+	vec3(335, -1447, 826), // 27 
 	vec3(360, -1479, 1042), // 28
 	vec3(453, -1513, 1157), // 29
 	vec3(761, -1552, 1287), // 30
@@ -88,156 +86,116 @@ vec3 points[] = {
 	vec3(712, -985, 1268), // 54
 	vec3(692, -1069, 1284), // 55
 	vec3(761, -1070, 1376), // 56
-	vec3(580, -1133, 1280), // 57 // changed z from 1234
+	vec3(580, -1133, 1280), // 57
 	vec3(606, -1206, 1273), // 58
 	vec3(761, -1271, 1446), // 59
 	vec3(761, -1329, 1316), // 60
-	// right face
-	//vec3(761 + (761 - 392), -429, 1167), // 61
-	//vec3(761 + (761 - 486), -629, 1281), // 62
-	//vec3(761 + (761 - 292), -726, 1084), // 63
-	//vec3(761 + (761 - 630), -710, 1331), // 64
-	//vec3(761 + (761 - 397), -727, 1233), // 65
-	//vec3(761 + (761 - 324), -812, 1142), // 66
-	//vec3(761 + (761 - 303), -846, 1060), // 67
-	//vec3(761 + (761 - 305), -934, 1039), // 68
-	//vec3(761 + (761 - 347), -918, 1124), // 69
-	//vec3(761 + (761 - 503), -823, 1254), // 70
-	//vec3(761 + (761 - 601), -1058, 1259), // 71
-	//vec3(761 + (761 - 394), -1044, 1170), // 72
-	//vec3(761 + (761 - 242), -1002, 918), // 73
-	//vec3(761 + (761 - 290), -1179, 996), // 74
-	//vec3(761 + (761 - 462), -1290, 1115), // 75
-	//vec3(761 + (761 - 534), -1296, 1255), // 76
-	//vec3(761 + (761 - 602), -1421, 1256), // 77
-	//vec3(761 + (761 - 360), -1356, 1137), // 78
-	//vec3(761 + (761 - 329), -1374, 1023), // 79
-	//vec3(761 + (761 - 335), -1447, 826), // 80
-	//vec3(761 + (761 - 360), -1479, 1042), // 81
-	//vec3(761 + (761 - 453), -1513, 1157), // 82
-	//vec3(761 + (761 - 529), -1458, 1206), // 83
-	//vec3(761 + (761 - 622), -1563, 1235), // 84
-	//vec3(761 + (761 - 516), -1693, 1131), // 85
-	//vec3(761 + (761 - 410), -1594, 994), // 86
-	//vec3(761 + (761 - 494), -1710, 710), // 87
-	//vec3(761 + (761 - 492), -1816, 643), // 88
-	//vec3(761 + (761 - 545), -271, 1218), // 89
-	//vec3(761 + (761 - 402), -925, 1190), // 90
-	//vec3(761 + (761 - 506), -865, 1223), // 91
-	//vec3(761 + (761 - 554), -852, 1246), // 92
-	//vec3(761 + (761 - 583), -887, 1246), // 93
-	//vec3(761 + (761 - 641), -900, 1190), // 94
-	//vec3(761 + (761 - 450), -972, 1201), // 95
-	//vec3(761 + (761 - 535), -981, 1215), // 96
-	//vec3(761 + (761 - 599), -969, 1201), // 97
-	//vec3(761 + (761 - 629), -937, 1190), // 98
-	//vec3(761 + (761 - 670), -1001, 1263), // 99
-	//vec3(761 + (761 - 651), -1477, 1246), // 100
-	//vec3(761 + (761 - 712), -985, 1268), // 101
-	//vec3(761 + (761 - 692), -1069, 1284), // 102
-	//vec3(761 + (761 - 580), -1133, 1234), // 103
-	//vec3(761 + (761 - 606), -1206, 1273), // 104
+	vec3(290, -1166, 1004), // 61
 };
 
 // Triangles made up of points (counter clockwise)
 int triangles[][3] = {
 	{0, 1, 2}, // 0
-	{1, 3, 2}, // 1
-	{0, 2, 4}, // 2
-	{3, 7, 2}, // 3
-	{7, 12, 6}, // 4
-	{2, 7, 6}, // 5
-	{2, 6, 4}, // 6
-	{4, 6, 5}, // 7
-	{5, 6, 13}, // 8
-	{6, 12, 13}, // 9
-	{3, 8, 7}, // 10
-	{7, 8, 12}, // 11
-	{3, 18, 9}, // 12
-	{9, 18, 10}, // 13
-	{3, 9, 8}, // 14
-	{9, 10, 8}, // 15
-	{10, 11, 8}, // 16
-	{8, 11, 12}, // 17
+	{1, 3, 2}, // 1 
+	{0, 2, 4}, // 2 
+	{3, 7, 2}, // 3 
+	{7, 12, 6}, // 4 
+	{2, 7, 6}, // 5 
+	{2, 6, 4}, // 6 
+	{4, 6, 5}, // 7 
+	{5, 6, 13}, // 8 
+	{6, 12, 13}, // 9 
+	{3, 8, 7}, // 10 
+	{7, 8, 12}, // 11 
+	{3, 18, 9}, // 12 
+	{9, 18, 10}, // 13 
+	{3, 9, 8}, // 14 
+	{9, 10, 8}, // 15 
+	{10, 11, 8}, // 16 
+	{8, 11, 12}, // 17 
 	{18, 16, 10}, // 18
-	{10, 16, 11}, // 19
-	{18, 19, 16}, // 20
-	{19, 21, 16}, // 21
-	{21, 22, 16}, // 22
-	{19, 26, 25}, // 23
-	{19, 25, 21}, // 24
-	{25, 22, 21}, // 25
-	{26, 27, 28}, // 26 // changed this one
-	{26, 28, 25}, // 27 // changed this one
-	{28, 29, 25}, // 28
-	{25, 29, 22}, // 29
-	{22, 29, 33}, // 30
-	{33, 24, 22}, // 31
-	{24, 23, 22}, // 32
-	{22, 23, 20}, // 33
-	{28, 36, 29}, // 34
-	{36, 35, 29}, // 35
-	{29, 35, 34}, // 36
-	{29, 34, 33}, // 37
-	{33, 34, 30}, // 38
-	{34, 31, 30}, // 39
-	{36, 37, 35}, // 40
-	{37, 38, 39}, // 41
-	{35, 32, 34}, // 42
-	{34, 32, 31}, // 43
-	{37, 40, 35}, // 44 // changed this one
-	{37, 39, 40}, // 45
-	{35, 40, 32}, // 46
-	{41, 1, 0}, // 47
-	{11, 42, 12}, // 48
-	{11, 16, 42}, // 49
-	{42, 16, 47}, // 50
-	{42, 47, 43}, // 51
-	{42, 43, 12}, // 52
-	{43, 44, 12}, // 53
-	{47, 48, 43}, // 54
-	{43, 48, 45}, // 55
-	{48, 49, 45}, // 56
-	{49, 50, 45}, // 57
-	{45, 50, 46}, // 58
-	{44, 45, 46}, // 59
-	{46, 50, 14}, // 60
-	{49, 51, 50}, // 61
-	{50, 51, 14}, // 62
-	{47, 16, 48}, // 63
-	{16, 15, 48}, // 64
-	{48, 15, 49}, // 65
-	{49, 15, 51}, // 
-	{33, 52, 24}, // 71
-	{33, 30, 52}, // 72
-	{52, 30, 53}, // 73
-	{52, 53, 23}, // 74
-	{24, 52, 23}, // 75
-	{16, 57,15}, // 76
-	{15, 57, 55}, // 77
-	{15, 55, 51}, // 78
-	{51, 55, 14}, // 79
-	{55, 56, 14}, // 80
-	{55, 17, 56}, //81
-	{16, 22, 57}, // 82
-	{22, 58, 57}, // 83
-	{57, 58, 55}, // 84
-	{58, 17, 55}, // 85
-	{22, 60, 58}, // 86
-	{58, 60, 59}, // 87
-	{58, 59, 17}, // 88
-	{22, 20, 60}, // 89
-	{35, 40, 32}, // 90 // changed this one
-	{12, 44, 13}, // 91
-	{44, 46, 13}, // 92
-	{46, 14, 13}, // 93
-	{44, 43, 45}, // 94
-	{18, 26, 19}, // 95
-	{18, 27, 26}, // 96
-	{26, 27, 28}, // 97
-	{27, 36,28}, // 98
-	{27, 37, 36} // 99
+	{10, 16, 11}, // 19 
+	{18, 19, 16}, // 20 
+	{19, 21, 16}, // 21 
+	{21, 22, 16}, // 22 
+	{19, 26, 25}, // 23 
+	{19, 25, 21}, // 24 
+	{25, 22, 21}, // 25  
+	{26, 27, 28}, // 26 
+	{26, 28, 25}, // 27 
+	{28, 29, 25}, // 28 
+	{25, 29, 22}, // 29 
+	{22, 29, 33}, // 30 
+	{33, 24, 22}, // 31 
+	{24, 23, 22}, // 32 
+	{22, 23, 20}, // 33 
+	{28, 36, 29}, // 34 
+	{36, 35, 29}, // 35 
+	{29, 35, 34}, // 36 
+	{29, 34, 33}, // 37 
+	{33, 34, 30}, // 38 
+	{34, 31, 30}, // 39 
+	{36, 37, 35}, // 40 
+	{37, 38, 39}, // 41 
+	{35, 32, 34}, // 42 
+	{34, 32, 31}, // 43 
+	{37, 40, 35}, // 44
+	{37, 39, 40}, // 45 
+	{35, 40, 32}, // 46 
+	{41, 1, 0}, // 47 
+	{11, 42, 12}, // 48 
+	{11, 16, 42}, // 49 
+	{42, 16, 47}, // 50 
+	{42, 47, 43}, // 51 
+	{42, 43, 12}, // 52 
+	{43, 44, 12}, // 53 
+	{47, 48, 43}, // 54 
+	{43, 48, 45}, // 55 
+	{48, 49, 45}, // 56 
+	{49, 50, 45}, // 57 
+	{45, 50, 46}, // 58 
+	{44, 45, 46}, // 59 
+	{46, 50, 14}, // 60 
+	{49, 51, 50}, // 61 
+	{50, 51, 14}, // 62 
+	{47, 16, 48}, // 63 
+	{16, 15, 48}, // 64 
+	{48, 15, 49}, // 65 
+	{49, 15, 51}, // 66 
+	{33, 52, 24}, // 67 
+	{33, 30, 52}, // 68 
+	{52, 30, 53}, // 69 
+	{52, 53, 23}, // 70 
+	{24, 52, 23}, // 71 
+	{16, 57,15}, // 72 
+	{15, 57, 55}, // 73 
+	{15, 55, 51}, // 74 
+	{51, 55, 14}, // 75 
+	{55, 56, 14}, // 76 
+	{55, 17, 56}, // 77 
+	{16, 22, 57}, // 78 
+	{22, 58, 57}, // 79 
+	{57, 58, 55}, // 80 
+	{22, 60, 58}, // 81 
+	{58, 60, 59}, // 82 
+	{58, 17, 55}, // 83 
+	{58, 59, 17}, // 84 
+	{22, 20, 60}, // 85 
+	{12, 44, 13}, // 87 
+	{44, 46, 13}, // 88 
+	{46, 14, 13}, // 89 
+	{44, 43, 45}, // 90 
+	{18, 26, 19}, // 91 
+	{18, 27, 26}, // 92 
+	{27, 36, 28}, // 94 
+	{27, 37, 36} // 95
+
 };
+
+void Resize(GLFWwindow* w, int width, int height) {
+	camera.Resize(width, height);
+	glViewport(0, 0, width, height);
+}
 
 // Vertex shader
 const char* vertexShader = "\
@@ -260,7 +218,7 @@ const char* pixelShader = "\
 	in vec3 vPoint;								\n\
 	in vec3 vNormal;							\n\
 	uniform float a = 0.1f;						\n\
-	uniform vec3 lightPos = vec3(1, 0, 0);		\n\
+	uniform vec3 lightPos = vec3(1, 0, -1);		\n\
 	uniform vec3 color = vec3(1, 1, 1);			\n\
 	out vec4 pColor;							\n\
 	void main() {								\n\
@@ -275,11 +233,12 @@ const char* pixelShader = "\
         pColor = vec4(intensity * color, 1);	\n\
 	}";
 
-// Global constant variables indicating size of points, number of points, triangles and vertices
+// Global constant variables indicating size of points, number of points, triangles, vertices and normals
 const int sizePts = sizeof(points);
 const int npoints = sizeof(points) / sizeof(points[0]);
 const int ntriangles = sizeof(triangles) / sizeof(triangles[0]);
 const int nvertices = sizeof(triangles) / sizeof(int);
+vec3 normals[npoints];
 
 // Function to display image on screen.
 void Display(GLFWwindow* w) {
@@ -292,48 +251,30 @@ void Display(GLFWwindow* w) {
 	camera.SetSpeed(0.3f, 0.01f);
 
 	// Set window size
-//	int screenWidth, screenHeight; UNNEEDED
-//	glfwGetWindowSize(w, &screenWidth, &screenHeight); UNNEEDED
+	int screenWidth, screenHeight;
+	glfwGetWindowSize(w, &screenWidth, &screenHeight);
 
-	// Set scale
-//	mat4 scale = Scale(cubeSize, cubeSize, cubeStretch); // *** what's this cube stuff?
-	mat4 scale = Scale(gScale);
+	// Set scale 
+	mat4 scale = Scale(cubeSize, cubeSize, cubeStretch);
+
 	// Clear to gray, use app's shader
 	glClearColor(0.5, 0.5, 0.5, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(program);
-	glBindBuffer(GL_ARRAY_BUFFER, vBuffer); // **** needed to permit text, below
 
 	// Set vertex attribute pointers & uniforms
 	VertexAttribPointer(program, "point", 3, 0, (void*)0);
-	VertexAttribPointer(program, "normal", 3, 0, (void*)sizeof(sizePts));
+	VertexAttribPointer(program, "normal", 3, 0, (void*)sizePts);
 	SetUniform(program, "modelview", camera.modelview * scale);
 	SetUniform(program, "persp", camera.persp);
 
-	// Uncomment this to draw vertices and triangle outlines
-	/*
 	// Draw shape
-	glLineWidth(2);
-	int ntris = sizeof(triangles) / (3 * sizeof(int)), nvrts = sizeof(points) / sizeof(vec3);
-	SetUniform(program, "color", vec3(.3f, .3f, .3f));
-	for (int i = 0; i < ntris; i++)
-		glDrawElements(GL_LINE_LOOP, 3, GL_UNSIGNED_INT, &triangles[i]);
-	SetUniform(program, "color", vec3(0, 0, 0));
-	glPointSize(8);
-	//glDrawArrays(GL_POINTS, 0, nvrts);
-	mat4 m = camera.persp * camera.modelview * scale;
-	UseDrawShader(m);
-	//for (int i = 0; i < nvrts; i++)
-	//	Text(points[i], m, vec3(0,0,0), 12, "%i", i);
-	*/
-
-	SetUniform(program, "color", vec3(1, 1, 1)); // sets default color of face to white
 	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, triangles);
 
 	glFlush();
 }
 
-// Function to changing the points from pixel values to lie between +/- 1.
+// Function to changing the points from pixel values to lie between +/- 1.  
 void Normalize() {
 	int npoints = sizeof(points) / sizeof(vec3);
 	// Scale and offset so that points fall within +/-1 in x, y and z
@@ -358,7 +299,7 @@ void MouseButton(GLFWwindow* w, int butn, int action, int mods) {
 	if (action == GLFW_PRESS) {
 		double x, y;
 		glfwGetCursorPos(w, &x, &y);
-		camera.MouseDown(x, y);
+		camera.MouseDown((int)x, (int)y);
 	}
 	if (action == GLFW_RELEASE) {
 		camera.MouseUp();
@@ -366,30 +307,20 @@ void MouseButton(GLFWwindow* w, int butn, int action, int mods) {
 }
 
 // Mouse wheel event handler.
-// ****void MouseWheel(GLFWwindow* w, double xoffset, double direction) {
-//	camera.MouseWheel(direction, shift);
-//}
-bool Shift(GLFWwindow* w) {
-	return glfwGetKey(w, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-		glfwGetKey(w, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+void MouseWheel(GLFWwindow* w, double xoffset, double direction) {
+	camera.MouseWheel((int)direction, shift);
 }
-
-void MouseWheel(GLFWwindow* w, double xoffset, double yoffset) {
-	camera.MouseWheel(yoffset, Shift(w));
-}
-
 
 // Function called when mouse is held down and dragged.
 void MouseMove(GLFWwindow* w, double x, double y) {
 	if (glfwGetMouseButton(w, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		camera.MouseDrag(x, y, Shift(w));
-		// ****	camera.MouseDrag(x, y, shift);
+		camera.MouseDrag((int)x, (int)y, shift);
 	}
 }
 
-// Event handler for when different keys are pressed on the keyboard.
+// Event handler for when different keys are pressed on the keyboard. 
 void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
-	bool shift = mods & GLFW_MOD_SHIFT;
+	shift = mods & GLFW_MOD_SHIFT;
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
@@ -400,9 +331,8 @@ void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
 			fieldOfView = fieldOfView < 5 ? 5 : fieldOfView > 150 ? 150 : fieldOfView;
 			break;
 		case 'S':
-			gScale *= shift ? .9f : 1.1f;
-			//	**** cubeStretch *= shift ? .9f : 1.1f;
-			//	cubeStretch = cubeStretch < .02f ? .02f : cubeStretch;
+			cubeStretch *= shift ? .9f : 1.1f;
+			cubeStretch = cubeStretch < .02f ? .02f : cubeStretch;
 			break;
 		}
 	}
@@ -411,11 +341,8 @@ void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
 // Initializes the vertex buffer
 void InitVertexBuffer() {
 
-	// Normalize all points
+	// Normalize all points 
 	Normalize();
-
-	// Create an array to hold normals for each point
-	vec3 normals[npoints];
 
 	// Zero array
 	for (int i = 0; i < npoints; ++i) {
@@ -452,11 +379,6 @@ void ErrorGFLW(int id, const char* reason) {
 	printf("GFLW error %i: %s\n", id, reason);
 }
 
-void Resize(GLFWwindow* window, int width, int height) {
-	camera.Resize(width, height); // ****
-	glViewport(0, 0, winWidth = width, winHeight = height); // ****
-}
-
 void Close() {
 	// unbind vertex buffer and free GPU memory
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -468,7 +390,8 @@ int main() {
 	glfwSetErrorCallback(ErrorGFLW);
 	if (!glfwInit())
 		return 1;
-	GLFWwindow* w = glfwCreateWindow(400, 400, "Face", NULL, NULL);
+	int screenWidth = 1200;
+	GLFWwindow* w = glfwCreateWindow(screenWidth, screenWidth, "Face", NULL, NULL);
 	if (!w) {
 		glfwTerminate();
 		return 1;
@@ -483,8 +406,6 @@ int main() {
 	PrintGLErrors();
 	program = LinkProgramViaCode(&vertexShader, &pixelShader);
 	InitVertexBuffer();
-	camera.SetSpeed(.01, .001f); // **** otherwise, a bit twitchy
-	glfwSetWindowSizeCallback(w, Resize); // ***** so can view larger window
 	glfwSwapInterval(1);
 	while (!glfwWindowShouldClose(w)) {
 		Display(w);
