@@ -74,24 +74,24 @@ vec3 points[] = {
 	vec3(545, -271, 1218), // 41
 	vec3(402, -925, 1190), // 42
 	vec3(506, -865, 1223), // 43
-	vec3(554, -852, 1246), // 44
-	vec3(583, -925, 1201), // 45
-	vec3(641, -900, 1201), // 46
-	vec3(450, -972, 1201), // 47
-	vec3(535, -981, 1215), // 48
-	vec3(599, -969, 1201), // 49
-	vec3(629, -937, 1190), // 50
+	vec3(554, -852, 1223), // 44
+	vec3(583, -925, 1223), // 45
+	vec3(641, -900, 1223), // 46
+	vec3(450, -972, 1223), // 47
+	vec3(535, -981, 1223), // 48
+	vec3(599, -969, 1223), // 49
+	vec3(629, -937, 1223), // 50
 	vec3(670, -1001, 1263), // 51
 	vec3(651, -1477, 1246), // 52
 	vec3(761, -1488, 1276), // 53
-	vec3(712, -985, 1268), // 54
+	vec3(712, -985, 1268), // 54 // unused point
 	vec3(692, -1069, 1284), // 55
 	vec3(761, -1070, 1376), // 56
 	vec3(580, -1133, 1280), // 57
 	vec3(606, -1206, 1273), // 58
 	vec3(761, -1271, 1446), // 59
 	vec3(761, -1329, 1316), // 60
-	vec3(290, -1166, 1004), // 61
+	//vec3(290, -1166, 1004), // 61 unused point
 };
 
 // Triangles made up of points (counter clockwise)
@@ -192,6 +192,30 @@ int triangles[][3] = {
 	{27, 37, 36} // 95
 
 };
+
+void Reflect() {
+
+	// compute current # verts, uvs, and tris; resize the arrays to double
+
+		// fill in second half of doubled array:  uvs same, points’ x-coordinate negated (assuming mid-line is at x = 0)
+
+		// reflect triangles: fill in second half of doubled tri array
+
+		//    be sure to reverse the order of each new triangle
+
+		//    test each triangle corner for whether it is on (or close to) the mid-line
+
+		//            if on the midline, use the same vertex id as in the original triangle
+
+		//            if not on midline, use vertex id from second half of vertex array
+
+		// allocate normals same size as doubled vertex array, and initialize all normals to (0,0,0)
+
+		// for each triangle, compute its surface normal, and add normal to each corresponding vertex normals array
+
+		// unitize normals
+
+}
 
 void Resize(GLFWwindow* w, int width, int height) {
 	camera.Resize(width, height);
