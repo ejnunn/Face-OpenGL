@@ -84,7 +84,7 @@ vec3 points[] = {
 	vec3(670, -1001, 1263), // 51
 	vec3(651, -1477, 1246), // 52
 	vec3(761, -1488, 1276), // 53
-	vec3(712, -985, 1268), // 54 // unused point
+	vec3(712, -985, 1268), // 54 // unused point, must adjust all triangles that use points greater than this
 	vec3(692, -1069, 1284), // 55
 	vec3(761, -1070, 1376), // 56
 	vec3(580, -1133, 1280), // 57
@@ -194,26 +194,42 @@ int triangles[][3] = {
 };
 
 void Reflect() {
-
 	// compute current # verts, uvs, and tris; resize the arrays to double
+	
+	// fill in second half of doubled array:  uvs same, points’ x-coordinate negated (assuming mid-line is at x = 0)
 
-		// fill in second half of doubled array:  uvs same, points’ x-coordinate negated (assuming mid-line is at x = 0)
+	// reflect triangles: fill in second half of doubled tri array
 
-		// reflect triangles: fill in second half of doubled tri array
+	//    be sure to reverse the order of each new triangle
 
-		//    be sure to reverse the order of each new triangle
+	//    test each triangle corner for whether it is on (or close to) the mid-line
 
-		//    test each triangle corner for whether it is on (or close to) the mid-line
+	//            if on the midline, use the same vertex id as in the original triangle
 
-		//            if on the midline, use the same vertex id as in the original triangle
+	//            if not on midline, use vertex id from second half of vertex array
 
-		//            if not on midline, use vertex id from second half of vertex array
+	// allocate normals same size as doubled vertex array, and initialize all normals to (0,0,0)
+	// Zero array
+	for (int i = 0; i < npoints; ++i) {
+		normals[i] = vec3(0, 0, 0);
+	}
 
-		// allocate normals same size as doubled vertex array, and initialize all normals to (0,0,0)
+	// for each triangle, compute its surface normal, and add normal to each corresponding vertex normals array
+	// Compute normal for each triangle, accumulate for each vertex
+	for (int i = 0; i < ntriangles; ++i) {
+		int* t = triangles[i];
+		vec3 p1(points[t[0]]), p2(points[t[1]]), p3(points[t[2]]);
+		vec3 n = normalize(cross(p3 - p2, p2 - p1));
+		for (int k = 0; k < 3; k++) {
+			normals[t[k]] += n;
+		}
+	}
 
-		// for each triangle, compute its surface normal, and add normal to each corresponding vertex normals array
-
-		// unitize normals
+	// unitize normals
+	// Set vertex normals to unit length
+	for (int i = 0; i < npoints; ++i) {
+		normals[i] = normalize(normals[i]);
+	}
 
 }
 
