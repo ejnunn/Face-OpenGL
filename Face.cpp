@@ -193,6 +193,7 @@ int triangles[][3] = {
 
 };
 
+/*
 void Reflect() {
 	// compute current # verts, uvs, and tris; resize the arrays to double
 	
@@ -232,7 +233,9 @@ void Reflect() {
 	}
 
 }
+*/
 
+// To dynamically resize the viewport when a user resizes the application window
 void Resize(GLFWwindow* w, int width, int height) {
 	camera.Resize(width, height);
 	glViewport(0, 0, width, height);
@@ -416,6 +419,7 @@ void InitVertexBuffer() {
 	glBufferSubData(GL_ARRAY_BUFFER, sizePts, sizeNms, &normals[0]);
 }
 
+// Display a message if GFLW throws an error
 void ErrorGFLW(int id, const char* reason) {
 	printf("GFLW error %i: %s\n", id, reason);
 }
