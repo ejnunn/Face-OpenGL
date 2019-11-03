@@ -2,7 +2,7 @@
 // Eric Nunn & Yvonne Rogell
 // CPSC 5700, Seattle University, Fall Quarter 2019
 
-// Include statments
+// Include statements
 #include <glad.h>
 #include <glfw3.h>
 #include <stdio.h>
@@ -84,14 +84,12 @@ vec3 points[] = {
 	vec3(670, -1001, 1263), // 51
 	vec3(651, -1477, 1246), // 52
 	vec3(761, -1488, 1276), // 53
-	vec3(712, -985, 1268), // 54 // unused point, must adjust all triangles that use points greater than this
 	vec3(692, -1069, 1284), // 55
 	vec3(761, -1070, 1376), // 56
 	vec3(580, -1133, 1280), // 57
 	vec3(606, -1206, 1273), // 58
 	vec3(761, -1271, 1446), // 59
 	vec3(761, -1329, 1316), // 60
-	//vec3(290, -1166, 1004), // 61 unused point
 };
 
 // Triangles made up of points (counter clockwise)
@@ -168,20 +166,20 @@ int triangles[][3] = {
 	{52, 30, 53}, // 69 
 	{52, 53, 23}, // 70 
 	{24, 52, 23}, // 71 
-	{16, 57,15}, // 72 
-	{15, 57, 55}, // 73 
-	{15, 55, 51}, // 74 
-	{51, 55, 14}, // 75 
-	{55, 56, 14}, // 76 
-	{55, 17, 56}, // 77 
-	{16, 22, 57}, // 78 
-	{22, 58, 57}, // 79 
-	{57, 58, 55}, // 80 
-	{22, 60, 58}, // 81 
-	{58, 60, 59}, // 82 
-	{58, 17, 55}, // 83 
-	{58, 59, 17}, // 84 
-	{22, 20, 60}, // 85 
+	{16, 56,15}, // 72 
+	{15, 56, 54}, // 73 
+	{15, 54, 51}, // 74 
+	{51, 54, 14}, // 75 
+	{54, 55, 14}, // 76 
+	{54, 17, 55}, // 77 
+	{16, 22, 56}, // 78 
+	{22, 57, 56}, // 79 
+	{56, 57, 54}, // 80 
+	{22, 59, 57}, // 81 
+	{57, 59, 58}, // 82 
+	{57, 17, 54}, // 83 
+	{57, 58, 17}, // 84 
+	{22, 20, 59}, // 85 
 	{12, 44, 13}, // 87 
 	{44, 46, 13}, // 88 
 	{46, 14, 13}, // 89 
@@ -193,53 +191,7 @@ int triangles[][3] = {
 
 };
 
-/*
-void Reflect() {
-	// compute current # verts, uvs, and tris; resize the arrays to double
-	
-	// fill in second half of doubled array:  uvs same, points’ x-coordinate negated (assuming mid-line is at x = 0)
 
-	// reflect triangles: fill in second half of doubled tri array
-
-	//    be sure to reverse the order of each new triangle
-
-	//    test each triangle corner for whether it is on (or close to) the mid-line
-
-	//            if on the midline, use the same vertex id as in the original triangle
-
-	//            if not on midline, use vertex id from second half of vertex array
-
-	// allocate normals same size as doubled vertex array, and initialize all normals to (0,0,0)
-	// Zero array
-	for (int i = 0; i < npoints; ++i) {
-		normals[i] = vec3(0, 0, 0);
-	}
-
-	// for each triangle, compute its surface normal, and add normal to each corresponding vertex normals array
-	// Compute normal for each triangle, accumulate for each vertex
-	for (int i = 0; i < ntriangles; ++i) {
-		int* t = triangles[i];
-		vec3 p1(points[t[0]]), p2(points[t[1]]), p3(points[t[2]]);
-		vec3 n = normalize(cross(p3 - p2, p2 - p1));
-		for (int k = 0; k < 3; k++) {
-			normals[t[k]] += n;
-		}
-	}
-
-	// unitize normals
-	// Set vertex normals to unit length
-	for (int i = 0; i < npoints; ++i) {
-		normals[i] = normalize(normals[i]);
-	}
-
-}
-*/
-
-// To dynamically resize the viewport when a user resizes the application window
-void Resize(GLFWwindow* w, int width, int height) {
-	camera.Resize(width, height);
-	glViewport(0, 0, width, height);
-}
 
 // Vertex shader
 const char* vertexShader = "\
@@ -262,7 +214,7 @@ const char* pixelShader = "\
 	in vec3 vPoint;								\n\
 	in vec3 vNormal;							\n\
 	uniform float a = 0.1f;						\n\
-	uniform vec3 lightPos = vec3(1, 0, -1);		\n\
+	uniform vec3 lightPos = vec3(-1, 0, -2); //vec3(-7, -6, -8);		\n\
 	uniform vec3 color = vec3(1, 1, 1);			\n\
 	out vec4 pColor;							\n\
 	void main() {								\n\
@@ -278,11 +230,14 @@ const char* pixelShader = "\
 	}";
 
 // Global constant variables indicating size of points, number of points, triangles, vertices and normals
-const int sizePts = sizeof(points);
 const int npoints = sizeof(points) / sizeof(points[0]);
 const int ntriangles = sizeof(triangles) / sizeof(triangles[0]);
-const int nvertices = sizeof(triangles) / sizeof(int);
-vec3 normals[npoints];
+const int midline = 761;
+vec3 normals[npoints * 2];
+vec3 pointsWholeFace[npoints * 2];
+int trianglesWholeFace[ntriangles * 2][3];
+const int nvertices = ntriangles * 2 * 3; //sizeof(trianglesWholeFace) / sizeof(int);
+const int sizePts = sizeof(pointsWholeFace);
 
 // Function to display image on screen.
 void Display(GLFWwindow* w) {
@@ -313,18 +268,17 @@ void Display(GLFWwindow* w) {
 	SetUniform(program, "persp", camera.persp);
 
 	// Draw shape
-	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, triangles);
+	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, trianglesWholeFace);
 
 	glFlush();
 }
 
 // Function to changing the points from pixel values to lie between +/- 1.  
 void Normalize() {
-	int npoints = sizeof(points) / sizeof(vec3);
 	// Scale and offset so that points fall within +/-1 in x, y and z
 	vec3 mn(FLT_MAX), mx(-FLT_MAX);
-	for (int i = 0; i < npoints; i++) {
-		vec3 p = points[i];
+	for (int i = 0; i < npoints * 2; i++) {
+		vec3 p = pointsWholeFace[i];
 		for (int k = 0; k < 3; k++) {
 			if (p[k] < mn[k]) mn[k] = p[k];
 			if (p[k] > mx[k]) mx[k] = p[k];
@@ -333,9 +287,87 @@ void Normalize() {
 	vec3 center = .5f * (mn + mx), range = mx - mn;
 	float maxrange = std::max(range.x, std::max(range.y, range.z));
 	float s = 2 / maxrange;
-	for (int i = 0; i < npoints; i++) {
-		points[i] = s * (points[i] - center);
+	for (int i = 0; i < npoints * 2; i++) {
+		pointsWholeFace[i] = s * (pointsWholeFace[i] - center);
 	}
+}
+
+
+
+void Reflect() {
+	// compute current # verts, uvs, and tris; resize the arrays to double
+	// Compute new number of vertices and fill with existing vertices from left side of face
+	for (int i = 0; i < npoints; ++i) {
+		pointsWholeFace[i] = points[i];
+	}
+
+	// compute new number of triangles and fill with existing triangles from left side of face
+	for (int i = 0; i < ntriangles; ++i) {
+		int* t = triangles[i];
+		trianglesWholeFace[i][0] = t[0];
+		trianglesWholeFace[i][1] = t[1];
+		trianglesWholeFace[i][2] = t[2];
+	}
+
+	// fill in second half of doubled array:  uvs same, points’ x-coordinate negated (assuming mid-line is at x = 0)
+	for (int i = 0; i < npoints; ++i) {
+		vec3 reflectedPoint(761 + (761 - points[i].x), points[i].y, points[i].z);
+		pointsWholeFace[i + npoints] = reflectedPoint;
+		printf("pointWholeFace[%d]: %d, %d, %d\n", i + npoints, (int)reflectedPoint.x, (int)reflectedPoint.y, (int)reflectedPoint.z);
+	}
+		
+	// reflect triangles: fill in second half of doubled tri array, reversing the order of each new triangle
+	for (int i = 0; i < ntriangles; ++i) {
+		int* triangle = triangles[i];
+
+		// test each triangle corner for whether it is on(or close to) the mid - line
+		// if on the midline, use the same vertex id as in the original triangle
+		// if not on midline, use vertex id from second half of vertex array
+		trianglesWholeFace[i + ntriangles][0] = pointsWholeFace[triangle[0]].x == midline ? triangle[0] : triangle[0] + npoints;
+		trianglesWholeFace[i + ntriangles][1] = pointsWholeFace[triangle[1]].x == midline ? triangle[1] : triangle[1] + npoints;
+		trianglesWholeFace[i + ntriangles][2] = pointsWholeFace[triangle[2]].x == midline ? triangle[2] : triangle[2] + npoints;
+
+		// reverse order of triangle
+		int temp = trianglesWholeFace[i + ntriangles][0];
+		trianglesWholeFace[i + ntriangles][0] = trianglesWholeFace[i + ntriangles][1];
+		trianglesWholeFace[i + ntriangles][1] = temp;
+
+		printf("originalTriangle: %d, %d, %d\n", triangle[0], triangle[1], triangle[2]);
+		printf("new triangle: %d, %d, %d\n", trianglesWholeFace[i + ntriangles][0], trianglesWholeFace[i + ntriangles][1], trianglesWholeFace[i + ntriangles][2]);
+	}
+}
+
+void computeNormals() {
+	// allocate normals same size as doubled vertex array, and initialize all normals to (0,0,0)
+	// Zero array
+	for (int i = 0; i < npoints * 2; ++i) {
+		normals[i] = vec3(0, 0, 0);
+	}
+
+	// for each triangle, compute its surface normal, and add normal to each corresponding vertex normals array
+	// Compute normal for each triangle, accumulate for each vertex
+	for (int i = 0; i < ntriangles * 2; ++i) {
+		int* t = trianglesWholeFace[i];
+		vec3 p1(pointsWholeFace[t[0]]), p2(pointsWholeFace[t[1]]), p3(pointsWholeFace[t[2]]);
+		//vec3 n = (i < ntriangles) ? normalize(cross(p3 - p2, p2 - p1)) : normalize(cross(p2 - p1, p3 - p2));
+		vec3 n = normalize(cross(p3 - p2, p2 - p1));
+		for (int k = 0; k < 3; k++) {
+			normals[t[k]] += n;
+		}
+	}
+
+	// unitize normals
+	// Set vertex normals to unit length
+	for (int i = 0; i < npoints * 2; ++i) {
+		normals[i] = normalize(normals[i]);
+	}
+}
+
+
+// To dynamically resize the viewport when a user resizes the application window
+void Resize(GLFWwindow* w, int width, int height) {
+	camera.Resize(width, height);
+	glViewport(0, 0, width, height);
 }
 
 // Mouse click event handler. Called when mouse button is pressed or released
@@ -384,29 +416,10 @@ void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
 
 // Initializes the vertex buffer
 void InitVertexBuffer() {
-
-	// Normalize all points 
+	
+	Reflect();
 	Normalize();
-
-	// Zero array
-	for (int i = 0; i < npoints; ++i) {
-		normals[i] = vec3(0, 0, 0);
-	}
-
-	// Compute normal for each triangle, accumulate for each vertex
-	for (int i = 0; i < ntriangles; ++i) {
-		int* t = triangles[i];
-		vec3 p1(points[t[0]]), p2(points[t[1]]), p3(points[t[2]]);
-		vec3 n = normalize(cross(p3 - p2, p2 - p1));
-		for (int k = 0; k < 3; k++) {
-			normals[t[k]] += n;
-		}
-	}
-
-	// Set vertex normals to unit length
-	for (int i = 0; i < npoints; ++i) {
-		normals[i] = normalize(normals[i]);
-	}
+	computeNormals();
 
 	// Create GPU buffer, make it the active buffer
 	glGenBuffers(1, &vBuffer);
@@ -415,7 +428,7 @@ void InitVertexBuffer() {
 	int sizeNms = sizeof(normals);
 	glBufferData(GL_ARRAY_BUFFER, sizePts + sizeNms, NULL, GL_STATIC_DRAW);
 	// Copy data
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizePts, &points[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizePts, &pointsWholeFace[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, sizePts, sizeNms, &normals[0]);
 }
 
@@ -451,7 +464,7 @@ int main() {
 	PrintGLErrors();
 	program = LinkProgramViaCode(&vertexShader, &pixelShader);
 	InitVertexBuffer();
-	camera.SetSpeed(.01, .001f); // **** otherwise, a bit twitchy
+	camera.SetSpeed(.01f, .001f); // **** otherwise, a bit twitchy
 	glfwSetWindowSizeCallback(w, Resize); // ***** so can view larger window
 	glfwSwapInterval(1);
 	while (!glfwWindowShouldClose(w)) {
