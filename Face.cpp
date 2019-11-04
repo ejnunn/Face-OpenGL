@@ -246,22 +246,22 @@ const int midline = 761;
 vec3 normals[npoints * 2];
 vec3 pointsWholeFace[npoints * 2];
 int trianglesWholeFace[ntriangles * 2][3];
+vec2 uvs[npoints * 2];
 const int nvertices = ntriangles * 2 * 3;
 const int sizePts = sizeof(pointsWholeFace);
-std::vector<vec3> uvs(pointsWholeFace, pointsWholeFace+(npoints*2));	// vertex texture coordinates; changed "vec2" to "vec3"
+const int sizeNms = sizeof(normals);
+const int sizeUVs = sizeof(uvs);
 const char* filename = "yvonne.tga";
 int textureUnit = 0;
-GLuint textureName = LoadTexture(filename, textureUnit); // in Misc.h
+
 
 // Function to display image on screen.
 void Display(GLFWwindow* w) {
-	float dx = 0, dy = 0, s = 1;
-	mat4 t = Translate(dx, dy, 0) * Scale(s);
-	SetUniform(program, "textureTransform", t);
-
 	// Clears the buffer
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
+
+	GLuint textureName = LoadTexture(filename, textureUnit); // in Misc.h
 
 	// Set camera speed
 	camera.SetSpeed(0.3f, 0.01f);
@@ -273,6 +273,10 @@ void Display(GLFWwindow* w) {
 	// Set scale 
 	mat4 scale = Scale(cubeSize, cubeSize, cubeStretch);
 
+	// Set texture transform
+	float dx = 0, dy = 0, s = 1;
+	mat4 t = Translate(dx, dy, 0) * Scale(s);
+
 	// Clear to gray, use app's shader
 	glClearColor(0.5, 0.5, 0.5, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -281,15 +285,16 @@ void Display(GLFWwindow* w) {
 	// load texture
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
 	glBindTexture(GL_TEXTURE_2D, textureName);
-	SetUniform(program, "textureImage", textureUnit);
 
 	// Set vertex attribute pointers & uniforms
 	VertexAttribPointer(program, "point", 3, 0, (void*)0);
 	VertexAttribPointer(program, "normal", 3, 0, (void*)sizePts);
-	VertexAttribPointer(program, "uv", 2, 0, (void*)sizeof(pointsWholeFace));
+	VertexAttribPointer(program, "uv", 2, 0, (void*)(sizePts + sizeNms));
 
 	SetUniform(program, "modelview", camera.modelview * scale);
 	SetUniform(program, "persp", camera.persp);
+	SetUniform(program, "textureImage", textureUnit);
+	SetUniform(program, "textureTransform", t);
 
 	// Draw shape
 	glDrawElements(GL_TRIANGLES, nvertices, GL_UNSIGNED_INT, trianglesWholeFace);
@@ -333,13 +338,13 @@ void Reflect() {
 		trianglesWholeFace[i][2] = t[2];
 	}
 
-	// fill in second half of doubled array:  uvs same, points’ x-coordinate negated (assuming mid-line is at x = 0)
+	// fill in second half of doubled array:  uvs same, points? x-coordinate negated (assuming mid-line is at x = 0)
 	for (int i = 0; i < npoints; ++i) {
 		vec3 reflectedPoint(761 + (761 - points[i].x), points[i].y, points[i].z);
 		pointsWholeFace[i + npoints] = reflectedPoint;
 		printf("pointWholeFace[%d]: %d, %d, %d\n", i + npoints, (int)reflectedPoint.x, (int)reflectedPoint.y, (int)reflectedPoint.z);
 	}
-		
+
 	// reflect triangles: fill in second half of doubled tri array, reversing the order of each new triangle
 	for (int i = 0; i < ntriangles; ++i) {
 		int* triangle = triangles[i];
@@ -440,16 +445,19 @@ void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
 
 // Initializes the vertex buffer
 void InitVertexBuffer() {
-	
+
 	Reflect();
 	Normalize();
 	computeNormals();
+
+	for (int i = 0; i < npoints * 2; ++i) {
+		uvs[i] = vec2(pointsWholeFace[i].x, pointsWholeFace[i].y);
+	}
 
 	// Create GPU buffer, make it the active buffer
 	glGenBuffers(1, &vBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
 	// Allocate memory for vertex positions and normals
-	int sizeNms = sizeof(normals), sizeUVs = sizeof(uvs);
 	glBufferData(GL_ARRAY_BUFFER, sizePts + sizeNms + sizeUVs, NULL, GL_STATIC_DRAW);
 	// Copy data
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizePts, &pointsWholeFace[0]);
