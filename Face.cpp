@@ -14,6 +14,9 @@
 #include "VecMat.h"
 #include "Camera.h"
 #include "Draw.h"
+#include <Misc.h>
+#include <vector>
+
 
 // GPU identifiers
 GLuint vBuffer = 0;
@@ -166,7 +169,7 @@ int triangles[][3] = {
 	{52, 30, 53}, // 69 
 	{52, 53, 23}, // 70 
 	{24, 52, 23}, // 71 
-	{16, 56,15}, // 72 
+	{16, 56, 15}, // 72 
 	{15, 56, 54}, // 73 
 	{15, 54, 51}, // 74 
 	{51, 54, 14}, // 75 
@@ -198,13 +201,17 @@ const char* vertexShader = "\
 	#version 130													\n\
 	in vec3 point;													\n\
 	in vec3 normal;													\n\
+	in vec2 uv;														\n\
 	uniform mat4 modelview;											\n\
 	uniform mat4 persp;												\n\
+	uniform mat4 textureTransform = mat4(1);						\n\
 	out vec3 vPoint;												\n\
 	out vec3 vNormal;												\n\
+	out vec2 vuv;													\n\
 	void main() {													\n\
 		vPoint = (modelview*vec4(point, 1)).xyz;					\n\
 		vNormal = (modelview*vec4(normal, 0)).xyz;					\n\
+		vuv = (textureTransform * vec4(uv, 0, 1)).xy;				\n\
 		gl_Position = persp * vec4(vPoint, 1);						\n\
 	}";
 
@@ -213,9 +220,11 @@ const char* pixelShader = "\
 	#version 130								\n\
 	in vec3 vPoint;								\n\
 	in vec3 vNormal;							\n\
+	in vec2 vuv;								\n\
 	uniform float a = 0.1f;						\n\
 	uniform vec3 lightPos = vec3(-1, 0, -2); //vec3(-7, -6, -8);		\n\
 	uniform vec3 color = vec3(1, 1, 1);			\n\
+	uniform sampler2D textureImage;				\n\
 	out vec4 pColor;							\n\
 	void main() {								\n\
 		vec3 N = normalize(vNormal);			\n\
@@ -226,7 +235,8 @@ const char* pixelShader = "\
 		float h = max(0, dot(R, E));			\n\
 		float s = pow(h, 100);					\n\
 		float intensity = clamp(a+d+s, 0, 1);	\n\
-        pColor = vec4(intensity * color, 1);	\n\
+		vec4 texColor = texture(textureImage, vuv);	// includes alpha	\n\
+		pColor = vec4(texColor.rgb, 1);	// but make opaque				\n\
 	}";
 
 // Global constant variables indicating size of points, number of points, triangles, vertices and normals
@@ -236,11 +246,18 @@ const int midline = 761;
 vec3 normals[npoints * 2];
 vec3 pointsWholeFace[npoints * 2];
 int trianglesWholeFace[ntriangles * 2][3];
-const int nvertices = ntriangles * 2 * 3; //sizeof(trianglesWholeFace) / sizeof(int);
+const int nvertices = ntriangles * 2 * 3;
 const int sizePts = sizeof(pointsWholeFace);
+std::vector<vec3> uvs(pointsWholeFace, pointsWholeFace+(npoints*2));	// vertex texture coordinates; changed "vec2" to "vec3"
+const char* filename = "yvonne.tga";
+int textureUnit = 0;
+GLuint textureName = LoadTexture(filename, textureUnit); // in Misc.h
 
 // Function to display image on screen.
 void Display(GLFWwindow* w) {
+	float dx = 0, dy = 0, s = 1;
+	mat4 t = Translate(dx, dy, 0) * Scale(s);
+	SetUniform(program, "textureTransform", t);
 
 	// Clears the buffer
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -261,9 +278,16 @@ void Display(GLFWwindow* w) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(program);
 
+	// load texture
+	glActiveTexture(GL_TEXTURE0 + textureUnit);
+	glBindTexture(GL_TEXTURE_2D, textureName);
+	SetUniform(program, "textureImage", textureUnit);
+
 	// Set vertex attribute pointers & uniforms
 	VertexAttribPointer(program, "point", 3, 0, (void*)0);
 	VertexAttribPointer(program, "normal", 3, 0, (void*)sizePts);
+	VertexAttribPointer(program, "uv", 2, 0, (void*)sizeof(pointsWholeFace));
+
 	SetUniform(program, "modelview", camera.modelview * scale);
 	SetUniform(program, "persp", camera.persp);
 
@@ -425,11 +449,12 @@ void InitVertexBuffer() {
 	glGenBuffers(1, &vBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vBuffer);
 	// Allocate memory for vertex positions and normals
-	int sizeNms = sizeof(normals);
-	glBufferData(GL_ARRAY_BUFFER, sizePts + sizeNms, NULL, GL_STATIC_DRAW);
+	int sizeNms = sizeof(normals), sizeUVs = sizeof(uvs);
+	glBufferData(GL_ARRAY_BUFFER, sizePts + sizeNms + sizeUVs, NULL, GL_STATIC_DRAW);
 	// Copy data
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizePts, &pointsWholeFace[0]);
 	glBufferSubData(GL_ARRAY_BUFFER, sizePts, sizeNms, &normals[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, sizePts + sizeNms, sizeUVs, &uvs[0]);
 }
 
 // Display a message if GFLW throws an error
