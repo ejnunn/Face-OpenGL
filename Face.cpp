@@ -222,7 +222,7 @@ const char* pixelShader = "\
 	in vec3 vNormal;							\n\
 	in vec2 vuv;								\n\
 	uniform float a = 0.1f;						\n\
-	uniform vec3 lightPos = vec3(-1, 0, -2); //vec3(-7, -6, -8);		\n\
+	uniform vec3 lightPos = vec3(-1, 0, -2);	\n\
 	uniform vec3 color = vec3(1, 1, 1);			\n\
 	uniform sampler2D textureImage;				\n\
 	out vec4 pColor;							\n\
@@ -235,7 +235,7 @@ const char* pixelShader = "\
 		float h = max(0, dot(R, E));			\n\
 		float s = pow(h, 100);					\n\
 		float intensity = clamp(a+d+s, 0, 1);	\n\
-		vec4 texColor = texture(textureImage, vuv);	// includes alpha	\n\
+		vec4 texColor = texture(textureImage, vuv);	\n\
 		pColor = vec4(texColor.rgb, 1);	// but make opaque				\n\
 	}";
 
@@ -251,8 +251,8 @@ const int nvertices = ntriangles * 2 * 3;
 const int sizePts = sizeof(pointsWholeFace);
 const int sizeNms = sizeof(normals);
 const int sizeUVs = sizeof(uvs);
-const char* filename = "yvonne.tga";
-int textureUnit = 0;
+const char* filename = "eric.tga";
+
 
 
 // Function to display image on screen.
@@ -261,6 +261,7 @@ void Display(GLFWwindow* w) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
+	int textureUnit = 0;
 	GLuint textureName = LoadTexture(filename, textureUnit); // in Misc.h
 
 	// Set camera speed
@@ -321,6 +322,24 @@ void Normalize() {
 	}
 }
 
+void NormalizeUVs() {
+	// Scale and offset so that points fall within +/-1 in x, y and z
+	vec2 mn(FLT_MAX), mx(-FLT_MAX);
+	for (int i = 0; i < npoints * 2; i++) {
+		vec2 p = uvs[i];
+		for (int k = 0; k < 2; k++) {
+			if (p[k] < mn[k]) mn[k] = p[k];
+			if (p[k] > mx[k]) mx[k] = p[k];
+		}
+	}
+	vec2 center = .5f * (mn + mx), range = mx - mn;
+	float maxrange = std::max(range.x, range.y);
+	float s = 2 / maxrange;
+	for (int i = 0; i < npoints * 2; i++) {
+		uvs[i] = s * (uvs[i] - center);
+	}
+}
+
 
 
 void Reflect() {
@@ -342,7 +361,6 @@ void Reflect() {
 	for (int i = 0; i < npoints; ++i) {
 		vec3 reflectedPoint(761 + (761 - points[i].x), points[i].y, points[i].z);
 		pointsWholeFace[i + npoints] = reflectedPoint;
-		printf("pointWholeFace[%d]: %d, %d, %d\n", i + npoints, (int)reflectedPoint.x, (int)reflectedPoint.y, (int)reflectedPoint.z);
 	}
 
 	// reflect triangles: fill in second half of doubled tri array, reversing the order of each new triangle
@@ -360,9 +378,6 @@ void Reflect() {
 		int temp = trianglesWholeFace[i + ntriangles][0];
 		trianglesWholeFace[i + ntriangles][0] = trianglesWholeFace[i + ntriangles][1];
 		trianglesWholeFace[i + ntriangles][1] = temp;
-
-		printf("originalTriangle: %d, %d, %d\n", triangle[0], triangle[1], triangle[2]);
-		printf("new triangle: %d, %d, %d\n", trianglesWholeFace[i + ntriangles][0], trianglesWholeFace[i + ntriangles][1], trianglesWholeFace[i + ntriangles][2]);
 	}
 }
 
@@ -451,8 +466,10 @@ void InitVertexBuffer() {
 	computeNormals();
 
 	for (int i = 0; i < npoints * 2; ++i) {
-		uvs[i] = vec2(pointsWholeFace[i].x, pointsWholeFace[i].y);
+		uvs[i] = vec2(pointsWholeFace[i].x * 0.5 + 0.5, pointsWholeFace[i].y * 0.5 + 0.5);
 	}
+
+	// NormalizeUVs();
 
 	// Create GPU buffer, make it the active buffer
 	glGenBuffers(1, &vBuffer);
