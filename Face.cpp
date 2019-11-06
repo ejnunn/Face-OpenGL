@@ -1,4 +1,4 @@
-// Assignment 5 (Exercise 10.2) - Create a face.
+// Assignment 6 (Exercise 15.5) - Texture-mapped mesh 
 // Eric Nunn & Yvonne Rogell
 // CPSC 5700, Seattle University, Fall Quarter 2019
 
@@ -194,8 +194,6 @@ int triangles[][3] = {
 
 };
 
-
-
 // Vertex shader
 const char* vertexShader = "\
 	#version 130													\n\
@@ -217,29 +215,31 @@ const char* vertexShader = "\
 
 // Pixel shader
 const char* pixelShader = "\
-	#version 130								\n\
-	in vec3 vPoint;								\n\
-	in vec3 vNormal;							\n\
-	in vec2 vuv;								\n\
-	uniform float a = 0.1f;						\n\
-	uniform vec3 lightPos = vec3(-1, 0, -2);	\n\
-	uniform vec3 color = vec3(1, 1, 1);			\n\
-	uniform sampler2D textureImage;				\n\
-	out vec4 pColor;							\n\
-	void main() {								\n\
-		vec3 N = normalize(vNormal);			\n\
-		vec3 L = normalize(lightPos-vPoint);	\n\
-		vec3 R = reflect(L, N);					\n\
-		vec3 E = normalize(vPoint);				\n\
-		float d = abs(dot(L, N));				\n\
-		float h = max(0, dot(R, E));			\n\
-		float s = pow(h, 100);					\n\
-		float intensity = clamp(a+d+s, 0, 1);	\n\
-		vec4 texColor = texture(textureImage, vuv);	\n\
-		pColor = vec4(texColor.rgb, 1);	// but make opaque				\n\
+	#version 130												\n\
+	in vec3 vPoint;												\n\
+	in vec3 vNormal;											\n\
+	in vec2 vuv;												\n\
+	uniform float a = 0.1f;										\n\
+	uniform vec3 lightPos = vec3(-1, 0, -2);					\n\
+	uniform vec3 color = vec3(1, 1, 1);							\n\
+	uniform sampler2D textureImage;								\n\
+	out vec4 pColor;											\n\
+	void main() {												\n\
+		vec3 N = normalize(vNormal);							\n\
+		vec3 L = normalize(lightPos-vPoint);					\n\
+		vec3 R = reflect(L, N);									\n\
+		vec3 E = normalize(vPoint);								\n\
+		float d = abs(dot(L, N));								\n\
+		float h = max(0, dot(R, E));							\n\
+		float s = pow(h, 100);									\n\
+		float intensity = clamp(a+d+s, 0, 1);					\n\
+		vec4 texColor = texture(textureImage, vuv);				\n\
+		pColor = vec4(texColor.rgb, 1);	// but make opaque		\n\
 	}";
 
-// Global constant variables indicating size of points, number of points, triangles, vertices and normals
+// Global constant variables indicating size of points, number of points, triangles, vertices, 
+// normals, and uv coordinates
+// Declares arrays of normals, pointsWholeFace, trianglesWholeFaces and uvs
 const int npoints = sizeof(points) / sizeof(points[0]);
 const int ntriangles = sizeof(triangles) / sizeof(triangles[0]);
 const int midline = 761;
@@ -251,8 +251,9 @@ const int nvertices = ntriangles * 2 * 3;
 const int sizePts = sizeof(pointsWholeFace);
 const int sizeNms = sizeof(normals);
 const int sizeUVs = sizeof(uvs);
-const char* filename = "eric.tga";
 
+// Constant holding file name.
+const char* filename = "yvonne.tga";
 
 
 // Function to display image on screen.
@@ -261,6 +262,7 @@ void Display(GLFWwindow* w) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
+	// Set texture unit and initialize texture name
 	int textureUnit = 0;
 	GLuint textureName = LoadTexture(filename, textureUnit); // in Misc.h
 
@@ -275,7 +277,7 @@ void Display(GLFWwindow* w) {
 	mat4 scale = Scale(cubeSize, cubeSize, cubeStretch);
 
 	// Set texture transform
-	float dx = 0, dy = 0, s = 1;
+	float dx = 0, dy = -0.05, s = 1;
 	mat4 t = Translate(dx, dy, 0) * Scale(s);
 
 	// Clear to gray, use app's shader
@@ -283,7 +285,7 @@ void Display(GLFWwindow* w) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(program);
 
-	// load texture
+	// Load texture
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
 	glBindTexture(GL_TEXTURE_2D, textureName);
 
@@ -291,7 +293,6 @@ void Display(GLFWwindow* w) {
 	VertexAttribPointer(program, "point", 3, 0, (void*)0);
 	VertexAttribPointer(program, "normal", 3, 0, (void*)sizePts);
 	VertexAttribPointer(program, "uv", 2, 0, (void*)(sizePts + sizeNms));
-
 	SetUniform(program, "modelview", camera.modelview * scale);
 	SetUniform(program, "persp", camera.persp);
 	SetUniform(program, "textureImage", textureUnit);
@@ -322,34 +323,15 @@ void Normalize() {
 	}
 }
 
-void NormalizeUVs() {
-	// Scale and offset so that points fall within +/-1 in x, y and z
-	vec2 mn(FLT_MAX), mx(-FLT_MAX);
-	for (int i = 0; i < npoints * 2; i++) {
-		vec2 p = uvs[i];
-		for (int k = 0; k < 2; k++) {
-			if (p[k] < mn[k]) mn[k] = p[k];
-			if (p[k] > mx[k]) mx[k] = p[k];
-		}
-	}
-	vec2 center = .5f * (mn + mx), range = mx - mn;
-	float maxrange = std::max(range.x, range.y);
-	float s = 2 / maxrange;
-	for (int i = 0; i < npoints * 2; i++) {
-		uvs[i] = s * (uvs[i] - center);
-	}
-}
-
-
-
+// Method to reflect the points and triangles of the left side of the face, so that
+// the whole face can be displayed
 void Reflect() {
-	// compute current # verts, uvs, and tris; resize the arrays to double
 	// Compute new number of vertices and fill with existing vertices from left side of face
 	for (int i = 0; i < npoints; ++i) {
 		pointsWholeFace[i] = points[i];
 	}
 
-	// compute new number of triangles and fill with existing triangles from left side of face
+	// Compute new number of triangles and fill with existing triangles from left side of face
 	for (int i = 0; i < ntriangles; ++i) {
 		int* t = triangles[i];
 		trianglesWholeFace[i][0] = t[0];
@@ -357,50 +339,48 @@ void Reflect() {
 		trianglesWholeFace[i][2] = t[2];
 	}
 
-	// fill in second half of doubled array:  uvs same, points? x-coordinate negated (assuming mid-line is at x = 0)
+	// Fill in second half of doubled array for pointsWholeFace. New x-coordinates are calculated using the
+	// value of the midline x-coordinate
 	for (int i = 0; i < npoints; ++i) {
-		vec3 reflectedPoint(761 + (761 - points[i].x), points[i].y, points[i].z);
+		vec3 reflectedPoint(midline + (midline - points[i].x), points[i].y, points[i].z);
 		pointsWholeFace[i + npoints] = reflectedPoint;
 	}
 
-	// reflect triangles: fill in second half of doubled tri array, reversing the order of each new triangle
+	// Fill in second half of doubled triangle array
 	for (int i = 0; i < ntriangles; ++i) {
 		int* triangle = triangles[i];
 
-		// test each triangle corner for whether it is on(or close to) the mid - line
-		// if on the midline, use the same vertex id as in the original triangle
-		// if not on midline, use vertex id from second half of vertex array
+		// Test each triangle corner for whether it is on(or close to) the mid - line
+		// If on the midline, use the same vertex id as in the original triangle
+		// If not on midline, use vertex id from second half of vertex array
 		trianglesWholeFace[i + ntriangles][0] = pointsWholeFace[triangle[0]].x == midline ? triangle[0] : triangle[0] + npoints;
 		trianglesWholeFace[i + ntriangles][1] = pointsWholeFace[triangle[1]].x == midline ? triangle[1] : triangle[1] + npoints;
 		trianglesWholeFace[i + ntriangles][2] = pointsWholeFace[triangle[2]].x == midline ? triangle[2] : triangle[2] + npoints;
 
-		// reverse order of triangle
+		// Reverse order of triangle to ensure they are still in counter clockwise order.
 		int temp = trianglesWholeFace[i + ntriangles][0];
 		trianglesWholeFace[i + ntriangles][0] = trianglesWholeFace[i + ntriangles][1];
 		trianglesWholeFace[i + ntriangles][1] = temp;
 	}
 }
 
+// Method to compute normals
 void computeNormals() {
-	// allocate normals same size as doubled vertex array, and initialize all normals to (0,0,0)
-	// Zero array
+	// Allocate normals same size as doubled vertex array, and initialize all normals to (0,0,0)
 	for (int i = 0; i < npoints * 2; ++i) {
 		normals[i] = vec3(0, 0, 0);
 	}
 
-	// for each triangle, compute its surface normal, and add normal to each corresponding vertex normals array
-	// Compute normal for each triangle, accumulate for each vertex
+	// For each triangle, compute its surface normal, and add normal to each corresponding vertex normals array
 	for (int i = 0; i < ntriangles * 2; ++i) {
 		int* t = trianglesWholeFace[i];
 		vec3 p1(pointsWholeFace[t[0]]), p2(pointsWholeFace[t[1]]), p3(pointsWholeFace[t[2]]);
-		//vec3 n = (i < ntriangles) ? normalize(cross(p3 - p2, p2 - p1)) : normalize(cross(p2 - p1, p3 - p2));
 		vec3 n = normalize(cross(p3 - p2, p2 - p1));
 		for (int k = 0; k < 3; k++) {
 			normals[t[k]] += n;
 		}
 	}
 
-	// unitize normals
 	// Set vertex normals to unit length
 	for (int i = 0; i < npoints * 2; ++i) {
 		normals[i] = normalize(normals[i]);
@@ -461,15 +441,14 @@ void Key(GLFWwindow* w, int key, int scancode, int action, int mods) {
 // Initializes the vertex buffer
 void InitVertexBuffer() {
 
-	Reflect();
-	Normalize();
-	computeNormals();
+	Reflect(); // Reflect points to create a whole face
+	Normalize(); // Set points to be within +/- 1.
+	computeNormals(); // Compute normals 
 
+	// Scale uv coordinates so that all points fall within [0,1]
 	for (int i = 0; i < npoints * 2; ++i) {
 		uvs[i] = vec2(pointsWholeFace[i].x * 0.5 + 0.5, pointsWholeFace[i].y * 0.5 + 0.5);
 	}
-
-	// NormalizeUVs();
 
 	// Create GPU buffer, make it the active buffer
 	glGenBuffers(1, &vBuffer);
