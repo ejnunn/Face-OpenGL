@@ -254,17 +254,14 @@ const int sizeUVs = sizeof(uvs);
 
 // Constant holding file name.
 const char* filename = "yvonne.tga";
-
+int textureUnit = 0;
+GLuint textureName;
 
 // Function to display image on screen.
 void Display(GLFWwindow* w) {
 	// Clears the buffer
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
-
-	// Set texture unit and initialize texture name
-	int textureUnit = 0;
-	GLuint textureName = LoadTexture(filename, textureUnit); // in Misc.h
 
 	// Set camera speed
 	camera.SetSpeed(0.3f, 0.01f);
@@ -496,6 +493,8 @@ int main() {
 	camera.SetSpeed(.01f, .001f); // **** otherwise, a bit twitchy
 	glfwSetWindowSizeCallback(w, Resize); // ***** so can view larger window
 	glfwSwapInterval(1);
+	// Set texture unit and initialize texture name
+	textureName = LoadTexture(filename, textureUnit); // in Misc.h
 	while (!glfwWindowShouldClose(w)) {
 		Display(w);
 		glfwSwapBuffers(w);
