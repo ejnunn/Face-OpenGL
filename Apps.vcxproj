@@ -151,13 +151,12 @@
     <ClCompile Include="..\Lib\Camera.cpp" />
     <ClCompile Include="..\Lib\Draw.cpp" />
     <ClCompile Include="..\Lib\Misc.cpp" />
-    <ClCompile Include="Face.cpp" />
+    <ClCompile Include="..\Lib\Quaternion.cpp" />
+    <ClCompile Include="..\Lib\Widgets.cpp" />
+    <ClCompile Include="Nunn-BezierPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\glfw3.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\yvonne.tga" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
